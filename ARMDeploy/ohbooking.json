@@ -46,6 +46,7 @@
         "serviceBusTopicNotificationsName": "mailnotifications",
         "serviceBusTopicUpdatesName": "mailupdates",
         "serviceBusQueueNotificationResponsesName": "mailidresponses",
+        "serviceBusQueueBookingSlot": "newbookingslot",
         "defaultSASKeyName": "RootManageSharedAccessKey",
         "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('serviceBusNamespaceName'), variables('defaultSASKeyName'))]" 
       },
@@ -133,6 +134,20 @@
                 ],
                 "properties": {
                     "path": "[variables('serviceBusQueueNotificationResponsesName')]",
+                    "defaultMessageTimeToLive": "1.00:00:00"
+                }
+            }
+            ,
+            {
+                "apiVersion": "2015-08-01",
+                "name": "[variables('serviceBusQueueBookingSlot')]",
+                "type": "queues",
+                "location": "[resourceGroup().location]",
+                "dependsOn": [
+                    "[concat('Microsoft.ServiceBus/namespaces/', variables('serviceBusNamespaceName'))]"
+                ],
+                "properties": {
+                    "path": "[variables('serviceBusQueueBookingSlot')]",
                     "defaultMessageTimeToLive": "1.00:00:00"
                 }
             }

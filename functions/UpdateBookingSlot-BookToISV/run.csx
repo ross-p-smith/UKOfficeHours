@@ -1,4 +1,8 @@
 ﻿#load "..\Shared\httpUtils.csx"
+#load "..\Shared\CompleteAppointmentDTO.csx"
+#load "..\Shared\TechnicalResource.csx"
+#load "..\Shared\EncryptionUtils.csx"
+#load "..\Shared\isv.csx"
 
 #r "Microsoft.ServiceBus"
 #r "Microsoft.WindowsAzure.Storage"
@@ -56,8 +60,6 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, CloudT
 
     isv queryisv = (from isv in tblisv.CreateQuery<isv>() select isv).Where(e => e.CurrentCode == bsjs.BookingCode).WithOptions(GetTableRequestOptionsWithEncryptionPolicy()).FirstOrDefault();
     
-
-
     if (queryisv != null)
     {
         log.Info($"Located ISV:{queryisv.Name} Code: {queryisv.CurrentCode}");  
@@ -68,7 +70,6 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, CloudT
 
         // Todo: Clean up UX and check this clientside too
         return req.CreateResponse(HttpStatusCode.NotFound, $"No ISV found with code: {bsjs.BookingCode}");
-
     }
 
     // Check the code has not already been used on an existing booking
@@ -76,14 +77,12 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, CloudT
     bookingslot chkslt = (from slot in tblbk.CreateQuery<bookingslot>() select slot).Where(e => e.BookingCode == bsjs.BookingCode).FirstOrDefault();
 
     if (chkslt != null)
-
     {
 
         log.Info($"Found existing booking for that code: {bsjs.BookingCode}"); 
 
         // Todo: Clean up UX and check this clientside too
         return req.CreateResponse(HttpStatusCode.Conflict, $"That code has already been used once! {bsjs.BookingCode}");
-
     }
 
         // Update bs object with new values if not already booked.  
@@ -104,7 +103,7 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, CloudT
             // Compile and Write the mail record away to the ServiceBus if this is enabled for this TE (if the TE master record is populated);
 
             // Find the TE master data record 
-            technicalevangelist chkte = (from te in tblte.CreateQuery<technicalevangelist>() select te).Where(e => e.RowKey == bsout.TechnicalEvangelist && e.PartitionKey == "ALL").FirstOrDefault();
+            TechnicalResource chkte = (from te in tblte.CreateQuery<TechnicalResource>() select te).Where(e => e.RowKey == bsout.TechnicalEvangelist && e.PartitionKey == "ALL").FirstOrDefault();
             if (chkte != null)
             {
                 log.Info($"Found TE : {chkte.TEName}");
@@ -146,16 +145,6 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, CloudT
         }
     }
 
-public class technicalevangelist : TableEntity
-{
-
-    // RowKey is the User's Alias
-    // PartitionKey is a static 'ALL' value
-    [EncryptProperty]
-    public string SkypeLink {get; set;}
-    public string TEName {get; set;}
-
-}
 public class bookingslot : TableEntity
 {
     public bookingslot()
@@ -186,97 +175,4 @@ public class bookingslot : TableEntity
     public string PBE { get; set; }
 
     public DateTime CreatedDateTime { get; set; }
-
-}
-
-public class isv : TableEntity
-{
-    [EncryptProperty]
-    public string Name { get; set; }
-    [EncryptProperty]
-    public string ContactName { get; set; }
-    [EncryptProperty]
-    public string ContactEmail { get; set; }
-    public string CurrentCode { get; set; }
-    public string AddUniqueAlphaNumCodeAndSave()
-    {
-
-        // Generate a unique alphanumeric 8 digit code. 
-
-        // MD5 hash the ISV name pair + date created + random number, all concatenated
-        // encode as a string, then Strip the first 8 chars
-        // Confirm it's unique in the isv table 
-        // If unique store it ! 
-
-        Random rnd = new Random();
-
-        string source = $"{ContactName}{Name}{DateTime.UtcNow.ToLongTimeString()}{rnd.Next().ToString()}{PartitionKey}";
-
-        using (SHA512 Hash = SHA512.Create())
-        {
-
-            string hash = GetSHA512Hash(Hash, source);
-
-            CurrentCode = hash.ToUpper().Substring(0, 8);
-
-        }
-
-        return CurrentCode;
-    }
-    private static string GetSHA512Hash(SHA512 shaHash, string input)
-    {
-
-        // Convert the input string to a byte array and compute the hash.
-        byte[] data = shaHash.ComputeHash(Encoding.UTF8.GetBytes(input));
-
-        // Create a new Stringbuilder to collect the bytes
-        // and create a string.
-        StringBuilder sBuilder = new StringBuilder();
-
-        // Loop through each byte of the hashed data 
-        // and format each one as a hexadecimal string.
-        for (int i = 0; i < data.Length; i++)
-        {
-            sBuilder.Append(data[i].ToString("x2"));
-        }
-
-        // Return the hexadecimal string.
-        return sBuilder.ToString();
-    }
-
-} 
-
-public static TableRequestOptions GetTableRequestOptionsWithEncryptionPolicy()
-{
-    KeyVaultKeyResolver cloudResolver = new KeyVaultKeyResolver(async (string authority, string resource, string scope) => {
-            ClientCredential credential = new ClientCredential(Environment.GetEnvironmentVariable("KVClientId"), Environment.GetEnvironmentVariable("KVKey"));
-            AuthenticationContext ctx = new AuthenticationContext(new Uri(authority).AbsoluteUri, false);
-            AuthenticationResult result = await ctx.AcquireTokenAsync(resource, credential);
-            return result.AccessToken;}
-    );
-    IKey cloudKey1 = cloudResolver.ResolveKeyAsync(Environment.GetEnvironmentVariable("KVKeyID"), CancellationToken.None).GetAwaiter().GetResult(); 
-    TableEncryptionPolicy encryptionPolicy = new TableEncryptionPolicy(cloudKey1, cloudResolver);
-    TableRequestOptions rqOptions = new TableRequestOptions() { EncryptionPolicy = encryptionPolicy };
-    return rqOptions; 
-} 
-
-public class CompleteAppointmentDTO
-{
-    public string MailID {get;set;}
-
-    public DateTime StartDate {get;set;}
-    public DateTime EndDate {get;set;}
-    
-    public int Duration {get;set;} 
-    
-    public string TEMail {get;set;}
-    public string TEName {get;set;}
-    public string TESkypeData {get;set;}    
-
-    public string PBEMail {get;set;}
-
-    public string ISVMail {get;set;}
-    public string ISVName {get;set;}
-    public string ISVContact {get;set;}
-        
 }

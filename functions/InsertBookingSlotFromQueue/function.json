@@ -1,0 +1,52 @@
+﻿{
+  "bindings": [
+    {
+      "name": "inQueueMessage",
+      "type": "serviceBusTrigger",
+      "direction": "in",
+      "queueName": "newBookingSlot",
+      "connection": "Mailer",
+      "accessRights": "Listen"
+    },
+    {
+      "type": "table",
+      "name": "outBookingTable",
+      "tableName": "bookingslot",
+      "connection": "storageConnection",
+      "direction": "out"
+    },
+    {
+      "type": "serviceBus",
+      "name": "outQueueNotification",
+      "topicName": "mailnotifications",
+      "connection": "Mailer",
+      "accessRights_": "Send",
+      "direction": "out"
+    },
+    {
+      "type": "table",
+      "name": "isvTable",
+      "tableName": "isv",
+      "take": 1,
+      "connection": "storageConnection",
+      "direction": "in"
+    },
+    {
+      "type": "table",
+      "name": "technicalResourceTable",
+      "tableName": "technicalevangelist",
+      "take": 1,
+      "connection": "storageConnection",
+      "direction": "in"
+    },
+    {
+      "type": "serviceBus",
+      "name": "outQueueUpdate",
+      "topicName": "mailupdates",
+      "connection": "Mailer",
+      "accessRights_": "Send",
+      "direction": "out"
+    }
+  ],
+  "disabled": false
+}

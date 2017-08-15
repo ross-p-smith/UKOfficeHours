@@ -38,7 +38,10 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, IAsync
     log.Info(JsonConvert.SerializeObject(thisBS));
     outObj.Add(thisBS);
 
-    await outputSbMsg.AddAsync(thisBS);
+    if(thisBS.MailID == null)
+    {
+        await outputSbMsg.AddAsync(thisBS);
+    }
 
     return req.CreateResponse(HttpStatusCode.OK, thisBS);
 
