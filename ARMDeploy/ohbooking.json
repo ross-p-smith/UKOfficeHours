@@ -46,7 +46,7 @@
         "serviceBusTopicNotificationsName": "mailnotifications",
         "serviceBusTopicUpdatesName": "mailupdates",
         "serviceBusQueueNotificationResponsesName": "mailidresponses",
-        "serviceBusQueueBookingSlot": "newbookingslot",
+        "serviceBusQueueBookingSlot": "mailPlaceholderUpdates",
         "defaultSASKeyName": "RootManageSharedAccessKey",
         "authRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/authorizationRules', variables('serviceBusNamespaceName'), variables('defaultSASKeyName'))]" 
       },

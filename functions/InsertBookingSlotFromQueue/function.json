@@ -4,7 +4,7 @@
       "name": "inQueueMessage",
       "type": "serviceBusTrigger",
       "direction": "in",
-      "queueName": "newBookingSlot",
+      "queueName": "mailPlaceholderUpdates",
       "connection": "Mailer",
       "accessRights": "Listen"
     },

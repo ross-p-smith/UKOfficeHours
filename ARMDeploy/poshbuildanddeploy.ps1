@@ -1,12 +1,12 @@
 # cd to <Repo>\UKOfficeHours\UKOfficeHours
-# Then run .\armdeploy\poshdeploy -deployname "<two letter environment code>"
+# Then run .\armdeploy\poshbuildanddeploy -deployname "<two letter environment code>"
 
 param
 (
     $deployname = "dc",
     $rg = "oh$deployname",
     $loc = "UKSouth",
-    $sub = ""
+    $sub = "8d8ea1f3-09df-4120-a3a2-a8addbd5824a"
 )
 
 #$localtenantdomainoverride

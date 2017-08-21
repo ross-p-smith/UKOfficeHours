@@ -1,5 +1,4 @@
-﻿#load "..\Shared\httpUtils.csx"
-#load "..\Shared\CompleteAppointmentDTO.csx"
+﻿#load "..\Shared\CompleteAppointmentDTO.csx"
 #load "..\Shared\TechnicalResource.csx"
 #load "..\Shared\EncryptionUtils.csx"
 #load "..\Shared\isv.csx"
@@ -10,18 +9,14 @@
 using System;    
 using System.Threading; 
 using System.Threading.Tasks;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.WindowsAzure.Storage.Table.Queryable;
 using Microsoft.WindowsAzure.Storage.Table;
 using Microsoft.WindowsAzure.Storage.Auth;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Cryptography;
 using System.Collections.Generic;
 using System.Configuration;
 using Microsoft.Azure; 
-using Microsoft.Azure.KeyVault; 
-using Microsoft.Azure.KeyVault.Core; 
 using System.Text;
 using System.Web;
 using System.Web.Http;
@@ -29,7 +24,6 @@ using System.Linq;
 using System.Net;
 using System.IO;
 using Newtonsoft.Json; 
-using Microsoft.WindowsAzure.Storage.Table.Queryable;
  
 public static void Run(string inQueueMessage, CloudTable outBookingTable, IAsyncCollector<BookingSlot> outQueueNotification, CloudTable isvTable, CloudTable technicalResourceTable, IAsyncCollector<CompleteAppointmentDTO> outQueueUpdate, TraceWriter log)
 {
@@ -104,12 +98,16 @@ public static void Run(string inQueueMessage, CloudTable outBookingTable, IAsync
                 log.Info("Unable to find ISV.");
             }
 
-            // Find the TE master data record 
-            TechnicalResource chkte = (from te in technicalResourceTable.CreateQuery<TechnicalResource>() select te)
-                .Where(e => e.RowKey == existingBookingSlot.TechnicalEvangelist && e.PartitionKey == "ALL")
+            // Find a valid technical resource 
+            TechnicalResource validTechnicalResource = 
+                (from technicalResource
+                 in technicalResourceTable.CreateQuery<TechnicalResource>()
+                 select technicalResource)
+                .Where(e => e.RowKey == existingBookingSlot.TechnicalEvangelist 
+                    && e.PartitionKey == "ALL")
                 .FirstOrDefault();
 
-            if (chkte != null)
+            if (validTechnicalResource != null)
             {
                 CompleteAppointmentDTO appointment = new CompleteAppointmentDTO()
                 {
@@ -118,8 +116,8 @@ public static void Run(string inQueueMessage, CloudTable outBookingTable, IAsync
                         EndDate = existingBookingSlot.EndDateTime,
                         Duration = existingBookingSlot.Duration,
                         TEMail = existingBookingSlot.TechnicalEvangelist,
-                        TEName = chkte.TEName,
-                        TESkypeData = chkte.SkypeLink, 
+                        TEName = validTechnicalResource.TEName,
+                        TESkypeData = validTechnicalResource.SkypeLink, 
                         PBEMail = existingBookingSlot.PBE,
                         ISVMail = queryisv.ContactEmail,
                         ISVName = queryisv.Name,

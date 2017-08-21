@@ -7,7 +7,7 @@ This is a working app, but is also intended to act as a clear sample of how to i
 
 Azure Active Directory and Azure App Service EasyAuth are used with ADAL.js to take care of OpenID Connect and OAuth Authentication and token handling.
 
-The service is simply an simple example booking system, written as a Knockout / Bootstrap SPA
+The service is a simple example booking system, written as a Knockout / Bootstrap SPA
 
 The front end is pure HTML5/js, using knockout for data binding, moment.js for date handling and bootstrap for UI styling.
 It uses Azure Functions for it's API / Middle Tier and is deployed via the KUDU Zip API to Azure app service
@@ -28,9 +28,9 @@ Once this is done, this script should run on any machine with the azure sdk inst
 
 1. Download the repo
 2. In the azure portal create an Azure AD Application called <environmentcode>-ukofficehours
-3. Login first with Login-AzureRmAccount, or VSTS, then run poshdeploy.ps1
+3. Login first with Login-AzureRmAccount, or VSTS, then run poshbuildanddeploy.ps1
 4. cd to <Repo>\UKOfficeHours\UKOfficeHours
-5. .\armdeploy\poshdeploy -deployname "<environmentcode>"
+5. .\armdeploy\poshbuildanddeploy -deployname "<environmentcode>"
 
 Valid environment codes for our internal usage deployment are "lo","cd","de","ts","pr", but any free combination can in theory be used.
 "lo" local services configured to interact with a local frontend
