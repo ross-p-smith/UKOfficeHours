@@ -6,7 +6,7 @@ param
     $deployname = "dc",
     $rg = "oh$deployname",
     $loc = "UKSouth",
-    $sub = "8d8ea1f3-09df-4120-a3a2-a8addbd5824a"
+    $sub = ""
 )
 
 #$localtenantdomainoverride
